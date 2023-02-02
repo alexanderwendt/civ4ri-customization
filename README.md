@@ -6,22 +6,24 @@ These modifications were made for Realism Invictus Git commit [XXX]
 
 
 Start settings for the game
-Difficulty: Monarch
+Difficulty: 
+* Monarch
 
-Victory: All except Time and Cultural
+Victory: 
+* All except Time and Cultural
 
 Settings:
-Raging barbarians
-No technology brokering
-No revolutions
-No barbarian civs
-Holy city migration
-No dynamic city naming
-Protect valuable units
-AI plays to win
+* Raging barbarians
+* No technology brokering
+* No revolutions
+* No barbarian civs
+* Holy city migration
+* No dynamic city naming
+* Protect valuable units
+* AI plays to win
 
 Multiplayer
-Take over AI
+* Take over AI
 
 
 ## Customizations
@@ -38,13 +40,13 @@ def canRazeCity(self,argsList):
 	# Can raze city if size smaller equal 4 or player is human
 	if pCity.getPopulation() <= 4 or pRazingPlayer.isHuman():
 		return True
-	
+
 	return False
 ```
 
 To be able to raze cities, the settings of BUG have to be modified
 In  ```.\Realism Invictus\Assets\Python\Components\BUG\BugGameUtils.py``` 
-search the following line and replace True with None. 
+search the following line and replace ```True``` with ```None``` to be able to activate that function. 
 
 ```self._setDefault("canRazeCity", None)```
 
@@ -54,7 +56,7 @@ CvGameUtils as your modifications will be ignored."
 
 Additional information: https://forums.civfanatics.com/threads/customizing-300bc-scenario.443668/
 
-### Adapted World Size Huge Settings
+### Adapted World Settings
 Adapted some settings of the world to prevent unwanted effects. File 
 ```.\Realism Invictus\Assets\XML\GameInfo\CIV4WorldInfo.xml```
 
@@ -78,7 +80,7 @@ For ```<Type>WORLDSIZE_HUGE</Type>``` do the following modifications
 <!--<iNumCitiesMaintenancePercent>25</iNumCitiesMaintenancePercent>-->
 <iNumCitiesMaintenancePercent>20</iNumCitiesMaintenancePercent>
 ```			
-### Adapted Difficulty Level Monarch Handicap Settings#
+### Adapted Handicap Settings
 To help the AI to expand to other continents, we lowered the penalty for distance and number of cities.
 File ```.\Realism Invictus\Assets\XML\GameInfo\CIV4HandicapInfo.xml```
 
@@ -93,6 +95,8 @@ For ```<Type>HANDICAP_MONARCH</Type>```
 
 
 ## Tips and Tricks to Get the Game running Smoothly
+I play several multiplayer games on the Worldmap Huge with 52 civilizations. We are 3-4 players, who play over Steam. Although it is tough, we managed to play the game to the modern era with 
+only moderate rate of crashes. Here is my experience about how to handle multiplayer problems.
 
 ### Process Lasso
 Use Process Lasso to free up memory at a certain point to reduce the risk of memory allocation failures.
@@ -108,11 +112,8 @@ How to use:
 - virtual memory metric to use: Any memory metric
 5. Go to options->Memory->Enable Smart Trim
 
-### Common Failures and Game Crashes
-I play several multiplayer games on the Worldmap Huge with 52 civilizations. We are 3-4 players, who play over Steam. Although it is tough, we managed to play the game to the modern era with only moderate rate of crashes. Here is my experience about how to handle multiplayer problems.
-
-#### MAF Failure and other Graphic Problems
-The following things help here
+### MAF Failure and other Graphic Problems
+The following things help here:
 1.	Get a computer with a very good graphic card and much graphic card memory (not normal RAM) to lower the probablity for these kinds of errors
 2.	Lower the resolution to minimum in full screen mode
 3.	Option: single unit graphics
@@ -149,6 +150,7 @@ We started by setting this to all computers and almost all out of sync immediate
 
 ### Out of Sync With Red, Blinking Message
 Usually, at the beginning oft he turns, one computer takes pretty long to finish and then, an out of sync occurs.
+
 #### Mitigation 1 
 Like above, activate the logs
 
@@ -158,8 +160,8 @@ Restart all computers. Usually, out of sync happens very irregular. Some times i
 #### Mitigation 3
 In case the OOS seems to occur due to one of the slower computers, change or reduce the graphics resolution. Some resolutions do not seem to work very well on all computers. Also in windowed mode, the OOS still occur. Try another resolution. In the worst case, use the lowest possible resolution.
 
-### Turn Loading Timeout
-If you play with a really slow computer, it ist he last to start the new turn. There seems tob e a timeout, which causes the connection to break after some time
+### Timeout of Turn Loading
+If you play with a really slow computer, it is the last to start the new turn. There seems to be a timeout, which causes the connection to break after some time.
 
 #### Mitigation 1
 If logging is on due to sync errors, deactive some of the loggers to see an increase in starting speed.
