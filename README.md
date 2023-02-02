@@ -2,7 +2,7 @@
 Customizations for Civilization 4 Realism Invictus
 
 ## Prerequisites
-These modifications were made for Realism Invictus Git commit [XXX]
+These modifications were made for a Realism Invictus 3.5 (Realism Invictus 3.5 (2020-02-28) Setup (Full).exe) around the 2020-08-21 with hotfixes 1-7 applied.
 
 
 Start settings for the game
