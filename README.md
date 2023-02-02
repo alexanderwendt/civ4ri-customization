@@ -116,7 +116,7 @@ How to use:
 The following setps increases the memory available for the application:
 1. Download the 4GB Patch from https://ntcore.com/files/4gb_patch.zip (Website https://ntcore.com/?page_id=371) and apply it to 
 ```C:\Games\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\Civ4BeyondSword.exe```
-2. Increase memory for the application with ```call bcdedit /set IncreaseUserVa 3072```, which is put into a script
+2. Increase memory for the application with ```call bcdedit /set IncreaseUserVa 3072```, which is put into a script here ```.\scrips\civ4_preparation.bat````
 
 
 ### MAF Failure and other Graphic Problems
