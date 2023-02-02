@@ -163,6 +163,7 @@
 			<Help>TXT_KEY_WORLD_HUGE_HELP</Help>
 			<iDefaultPlayers>15</iDefaultPlayers>
 			<iUnitNameModifier>0</iUnitNameModifier>
+			<!-- iTargetNumCities>6</iTargetNumCities -->
 			<iTargetNumCities>8</iTargetNumCities>
 			<iNumFreeBuildingBonuses>7</iNumFreeBuildingBonuses>
 			<iBuildingClassPrereqModifier>75</iBuildingClassPrereqModifier>
@@ -175,7 +176,7 @@
 			<iResearchPercent>80</iResearchPercent>
 			<!--<iPerCityResearchCostModifier>9</iPerCityResearchCostModifier>-->
 			<!--<iPerCityResearchCostModifier>4</iPerCityResearchCostModifier>-->
-			<iPerCityResearchCostModifier>1</iPerCityResearchCostModifier>
+			<iPerCityResearchCostModifier>4</iPerCityResearchCostModifier>
 			<iTradeProfitPercent>30</iTradeProfitPercent>
 			<!--<iDistanceMaintenancePercent>100</iDistanceMaintenancePercent>-->
 			<iDistanceMaintenancePercent>90</iDistanceMaintenancePercent>
