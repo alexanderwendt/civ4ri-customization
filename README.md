@@ -112,14 +112,21 @@ How to use:
 - virtual memory metric to use: Any memory metric
 5. Go to options->Memory->Enable Smart Trim
 
+### Must DOs to prevent Crashes of the Game
+The following setps increases the memory available for the application:
+1. Download the 4GB Patch from https://ntcore.com/files/4gb_patch.zip (Website https://ntcore.com/?page_id=371) and apply it to 
+```C:\Games\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\Civ4BeyondSword.exe```
+2. Increase memory for the application with ```call bcdedit /set IncreaseUserVa 3072```, which is put into a script
+
+
 ### MAF Failure and other Graphic Problems
 The following things help here:
-1.	Get a computer with a very good graphic card and much graphic card memory (not normal RAM) to lower the probablity for these kinds of errors
-2.	Lower the resolution to minimum in full screen mode
-3.	Option: single unit graphics
-4.	Option: graphical paging
-5.	CivilizationIV.ini: Paging out units and unit animations 
-6.	CivlizationIV.ini: Play in windowed mode and not in full screen
+1. Get a computer with a very good graphic card and much graphic card memory (not normal RAM) to lower the probablity for these kinds of errors
+2. Lower the resolution to minimum in full screen mode
+3. Option: single unit graphics
+4. Option: graphical paging
+5. CivilizationIV.ini: Paging out units and unit animations 
+6. CivlizationIV.ini: Play in windowed mode and not in full screen
 
 ### Out of Sync Errors Unnoticed
 The problem was that there emerged lots of out of sync errors early in the game. The worst thing was that it is not always noticeable that out of sync occurs. After some time, you see different things than other players. We play one very fast computer, two „normal“ computers and a slow laptop. It seems that the different speeds at which the computers are able to start a new turn cause frequent out of sync errors. 
@@ -168,4 +175,9 @@ If logging is on due to sync errors, deactive some of the loggers to see an incr
 
 #### Mitigation 2
 Buy a new and faster computer. Thr 10y old game requires more resources than many new games.
+
+### Fast Loading of Save Games in Multiplayer Mode
+If the save game of the host is put in the ```.\My Games\beyond the sword\Saves\multi\auto```, no loading of a save game in the game is necessary and players save 5min at the loading.
+In ```./scripts/Copy_Civ4_Save.bat``` the bat file is used to copy the current savegame over Dropbox from the host to all other multiplayers to prevent the really long loading times 
+in the game. Each player uses it on his/her local machine.
 
