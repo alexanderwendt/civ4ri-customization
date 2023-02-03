@@ -25,6 +25,13 @@ Settings:
 Multiplayer
 * Take over AI
 
+In game settings:
+*Automated workers leave fortifications
+
+civilization4.ini properties
+```; Specify the number of turns between autoSaves.  0 means no autosave.
+AutoSaveInterval = 1```
+
 
 ## Customizations
 
