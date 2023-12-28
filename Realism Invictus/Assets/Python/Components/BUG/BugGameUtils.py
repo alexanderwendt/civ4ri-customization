@@ -157,9 +157,7 @@ class Dispatcher:
 		self._callbacks = {}
 		self._baseUtils = CvGameUtils.CvGameUtils()
 		clazz = CvGameUtils.CvGameUtils
-		BugUtil.debug("BugGameUtils - CvGameUtilsClass %s", clazz)
 		for name, func in clazz.__dict__.iteritems():
-			BugUtil.debug("BugGameUtils - Set callback %s %s", name, func)
 			if not name.startswith("_") and isinstance(func, types.FunctionType):
 				self._createCallback(name, BugUtil.bindFunction(self._baseUtils, name), None, self._log)
 		
@@ -237,14 +235,13 @@ class Dispatcher:
 		if default is not None:
 			BugUtil.debug("BugGameUtils - creating callback %s with default %s", name, default)
 		else:
-			BugUtil.debug("BugGameUtils - creating callback %s.", name)
+			BugUtil.debug("BugGameUtils - creating callback %s", name)
 		callback = Callback(name, func, default, log)
 		self._callbacks[name] = callback
 		setattr(self.__class__, name, callback)
 	
 	def _getCallback(self, name):
 		try:
-			BugUtil.debug("BugGameUtils - get callback %s.", name)
 			return self._callbacks[name]
 		except KeyError:
 			BugUtil.trace("Unknown GameUtils callback %s", name)
@@ -300,6 +297,7 @@ class Dispatcher:
 		bound = lambda *args: func(utils, *args)
 		bound.__module__ = func.__module__
 		return bound
+
 
 ## Callback
 
@@ -432,11 +430,9 @@ class GameUtilsHandler(BugConfig.Handler):
 					if handlers:
 						for handler in handlers.replace(",", " ").split():
 							addHandler(BugUtil.lookupFunction(module, handler), override, log)
-							BugUtil.debug("BugGameUtils - Add handler %s", handler)
 					if listeners:
 						for listener in listeners.replace(",", " ").split():
 							addListener(BugUtil.lookupFunction(module, listener), log)
-							BugUtil.debug("BugGameUtils - Add handler %s", listener)
 				else:
 					addModuleUtils(BugUtil.lookupModule(module), override, log)
 		else:

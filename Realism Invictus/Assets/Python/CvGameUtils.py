@@ -588,7 +588,11 @@ class CvGameUtils:
 				return CyGameTextMgr().getPromotionHelp(iData2, False)
 ## Feature Widget Text##
 			elif iData1 == 7874:
-				return CyGameTextMgr().getFeatureHelp(iData2, False)
+				if iData2 >= 0:
+					iFeature = iData2 % 10000
+				else:
+					iFeature = -1;
+				return CyGameTextMgr().getFeatureHelp(iFeature, False)
 ## Terrain Widget Text##
 			elif iData1 == 7875:
 				return CyGameTextMgr().getTerrainHelp(iData2, False)

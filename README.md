@@ -14,13 +14,14 @@ Victory:
 
 Settings:
 * Raging barbarians
-* No technology brokering
-* No revolutions
+* No technology brokering 	(Allow tech trade, but only your own techs)
+* No revolutions			
 * No barbarian civs
 * Holy city migration
-* No dynamic city naming
+* No dynamic City Naming 	(No extra city renaming as we use to rename our cities by ourself)
 * Protect valuable units
 * AI plays to win
+* Influence Driven War
 
 Multiplayer
 * Take over AI
@@ -29,15 +30,19 @@ In game settings:
 *Automated workers leave fortifications
 
 civilization4.ini properties
-```; Specify the number of turns between autoSaves.  0 means no autosave.
-AutoSaveInterval = 1```
+```
+; Specify the number of turns between autoSaves.  0 means no autosave.
+AutoSaveInterval = 1
+```
 
 
 ## Customizations
+Following customizations were applied to the game for improved balance. 
 
 ### AI does not Raze big Cities
-Modified function to prevent the AI to raze big cities. In ```.\Realism Invictus\Assets\Python\CvGameUtils.py``` 
-enhance the method in the way you wish, e.g. that only cities with population < 6 can be destroyed.
+A problem is that the AI often razes cities with size 20 in a single turn as he conquers it. This is a 
+modified function to prevent the AI to raze big cities. In ```.\Realism Invictus\Assets\Python\CvGameUtils.py``` 
+enhance the method in the way you wish, e.g. that only cities with population <= 4 can be razed.
 
 ```	
 def canRazeCity(self,argsList):
@@ -55,7 +60,9 @@ To be able to raze cities, the settings of BUG have to be modified
 In  ```.\Realism Invictus\Assets\Python\Components\BUG\BugGameUtils.py``` 
 search the following line and replace ```True``` with ```None``` to be able to activate that function. 
 
-```self._setDefault("canRazeCity", None)```
+```
+self._setDefault("canRazeCity", None)
+```
 
 The reason can be found here https://forums.civfanatics.com/threads/making-cvgameutils-modular.323808/. "If your class doesn't define canTrain() BUG will use the one from CvGameUtils. 
 Actually, BUG will use the registered default if there is one to avoid calling the functions in CvGameUtils. This is why it is so very important that you do not modify the original 
@@ -73,7 +80,7 @@ Changes
 3. iDistanceMaintenancePercent lowered from 10 to 9 to make the players and computers to have more cities far away
 4. iNumCitiesMaintenancePercent lowered from 25 to 50 to make players have more cities
 
-For ```<Type>WORLDSIZE_HUGE</Type>``` do the following modifications
+For ```<Type>WORLDSIZE_HUGE</Type>``` do the following modifications:
 
 ```
 <!-- iTargetNumCities>6</iTargetNumCities -->
@@ -86,7 +93,8 @@ For ```<Type>WORLDSIZE_HUGE</Type>``` do the following modifications
 <iDistanceMaintenancePercent>90</iDistanceMaintenancePercent>
 <!--<iNumCitiesMaintenancePercent>25</iNumCitiesMaintenancePercent>-->
 <iNumCitiesMaintenancePercent>20</iNumCitiesMaintenancePercent>
-```			
+```
+
 ### Adapted Handicap Settings
 To help the AI to expand to other continents, we lowered the penalty for distance and number of cities.
 File ```.\Realism Invictus\Assets\XML\GameInfo\CIV4HandicapInfo.xml```
@@ -188,3 +196,14 @@ If the save game of the host is put in the ```.\My Games\beyond the sword\Saves\
 In ```./scripts/Copy_Civ4_Save.bat``` the bat file is used to copy the current savegame over Dropbox from the host to all other multiplayers to prevent the really long loading times 
 in the game. Each player uses it on his/her local machine.
 
+## How to Debug and Test a Game
+
+## core dll compilation
+In ```./compile-dll```, files necessary for the compilation of the realism invictus core dll can be found. How to use it:
+1. Download and install Visual Studio 2022 Community version
+2. Extract the deps.7z to a folder \[(FOLDER\]
+3. Open ```CvGameCoreDLL.2012.sln``` in Visual Studio
+4. In ```Makefile.settings.mk```, adapt the following paths
+- ```TOOLKIT=\[(FOLDER\]\Microsoft Visual C++ Toolkit 2003```
+- ```PSDK=\[(FOLDER\]\Microsoft Platform SDK```
+5. Execute build for Release
