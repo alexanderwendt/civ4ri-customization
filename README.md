@@ -580,3 +580,6 @@ In ```./compile-dll```, files necessary for the compilation of the realism invic
 - ```TOOLKIT=\[(FOLDER\]\Microsoft Visual C++ Toolkit 2003```
 - ```PSDK=\[(FOLDER\]\Microsoft Platform SDK```
 5. Execute build for Release
+
+# Additional Guides
+https://forums.civfanatics.com/threads/the-easiest-way-to-compile-a-new-dll.608137/
