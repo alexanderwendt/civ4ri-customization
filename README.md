@@ -42,7 +42,8 @@ Following customizations were applied to the game for improved balance.
 ### AI does not Raze big Cities
 A problem is that the AI often razes cities with size 20 in a single turn as he conquers it. This is a 
 modified function to prevent the AI to raze big cities. In ```.\Realism Invictus\Assets\Python\CvGameUtils.py``` 
-enhance the method in the way you wish, e.g. that only cities with population <= 4 can be razed.
+enhance the method in the way you wish, e.g. that only cities with population <= 4 can be razed or human always have the 
+choice to raze a city.
 
 ```	
 def canRazeCity(self,argsList):
@@ -77,37 +78,409 @@ Adapted some settings of the world to prevent unwanted effects. File
 Changes
 1. Set target number of cities higher to encourage the AI to build more cities
 2. iPerCityResearchCostModifier lowered from 9 to 1 as with many cities, the research takes far too long time to complete, like 40 turns
-3. iDistanceMaintenancePercent lowered from 10 to 9 to make the players and computers to have more cities far away
-4. iNumCitiesMaintenancePercent lowered from 25 to 50 to make players have more cities
+3. iDistanceMaintenancePercent lowered from 100 to 80 to make the players and computers to have more cities far away
+4. iNumCitiesMaintenancePercent lowered from 35 to 15 to make players have more cities
+5. iColonyMaintenancePercent lowered from 30 to 20 to make players have more cities
 
 For ```<Type>WORLDSIZE_HUGE</Type>``` do the following modifications:
 
 ```
+<!-- AW CUSTOM CHANGES BEGIN -->
 <!-- iTargetNumCities>6</iTargetNumCities -->
 <iTargetNumCities>8</iTargetNumCities>
-...
+<!-- AW CUSTOM CHANGES END -->
+```
+
+and further down in the XML 
+
+```
+<!-- AW CUSTOM CHANGES BEGIN -->
 <!--<iPerCityResearchCostModifier>9</iPerCityResearchCostModifier>-->
 <iPerCityResearchCostModifier>1</iPerCityResearchCostModifier>
 <iTradeProfitPercent>30</iTradeProfitPercent>
 <!--<iDistanceMaintenancePercent>100</iDistanceMaintenancePercent>-->
-<iDistanceMaintenancePercent>90</iDistanceMaintenancePercent>
-<!--<iNumCitiesMaintenancePercent>25</iNumCitiesMaintenancePercent>-->
-<iNumCitiesMaintenancePercent>20</iNumCitiesMaintenancePercent>
+<iDistanceMaintenancePercent>80</iDistanceMaintenancePercent>
+<!--<iNumCitiesMaintenancePercent>35</iNumCitiesMaintenancePercent>-->
+<iNumCitiesMaintenancePercent>15</iNumCitiesMaintenancePercent>
+<!--<iColonyMaintenancePercent>30</iColonyMaintenancePercent>-->
+<iColonyMaintenancePercent>20</iColonyMaintenancePercent>
+<!-- AW CUSTOM CHANGES END -->
 ```
 
 ### Adapted Handicap Settings
 To help the AI to expand to other continents, we lowered the penalty for distance and number of cities.
-File ```.\Realism Invictus\Assets\XML\GameInfo\CIV4HandicapInfo.xml```
+File ```.\Realism Invictus\Assets\XML\GameInfo\CIV4HandicapInfo.xml``` (copy the original to *.xml.orig)
 
 For ```<Type>HANDICAP_MONARCH</Type>```
 
+replace the following values 
 ```
+<!-- AW CUSTOM CHANGES BEGIN -->
 <!-- iDistanceMaintenancePercent>90</iDistanceMaintenancePercent -->
 <iDistanceMaintenancePercent>80</iDistanceMaintenancePercent>
-<!-- iNumCitiesMaintenancePercent>80</iNumCitiesMaintenancePercent -->
-<iNumCitiesMaintenancePercent>75</iNumCitiesMaintenancePercent>
+<!-- iNumCitiesMaintenancePercent>85</iNumCitiesMaintenancePercent -->
+<iNumCitiesMaintenancePercent>70</iNumCitiesMaintenancePercent>
+<!-- AW CUSTOM CHANGES END -->
 ```
 
+### Adapt Research Pace During the Game
+Often, it turns out that the research is not balanced, and especially it is noticable in the late game. In multiplayer 
+games it is not possible to create a new map from the save game to fix it. Therefore, the research rate has to be "fixed" 
+in the python scripts instead. It can be done by doing the following. Check that at the start of the game the 
+option "set ahead of time research penalty" is activated. In the code, disable the ahead of time penalty and adapt it. 
+This is done in the file ```.\Realism Invictus\Assets\Python\CvEventManager.py```. 
+
+In these methods, replace the logic with a for loop that always sets ahead of time to 0 to cancel the effect 
+of ahead of time.
+
+```
+def onLoadGame(self, argsList):
+		## Stored Data Handling ##
+		sd.load() # load & unpickle script data
+		## Stored Data Handling ##
+
+		if not gc.getGame().isOption(GameOptionTypes.GAMEOPTION_NO_AHEAD):
+			CyGame().setAheadOfTimeEra(0)
+			for iTech in xrange(gc.getNumTechInfos()):
+				TechInfo = gc.getTechInfo(iTech)
+				TechInfo.setAheadOfTime(0)
+
+
+			# CyGame().setAheadOfTimeEra(0)
+			# if (gc.getGame().getGameTurnYear() < -2000):
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(100)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(200)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(300)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(400)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(500)
+			# if (gc.getGame().getGameTurnYear() > -2001):
+			# 	CyGame().setAheadOfTimeEra(1)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(50)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(100)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(200)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(300)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(400)
+			# if (gc.getGame().getGameTurnYear() > -1201):
+			# 	CyGame().setAheadOfTimeEra(2)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(100)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(200)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(300)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(400)
+			# if (gc.getGame().getGameTurnYear() > 0):
+			# 	CyGame().setAheadOfTimeEra(3)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(50)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(100)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(200)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(300)
+			# if (gc.getGame().getGameTurnYear() > 400):
+			# 	CyGame().setAheadOfTimeEra(4)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(100)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(200)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(300)
+			# if (gc.getGame().getGameTurnYear() > 1100):
+			# 	CyGame().setAheadOfTimeEra(5)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(50)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(100)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(200)
+			# if (gc.getGame().getGameTurnYear() > 1400):
+			# 	CyGame().setAheadOfTimeEra(6)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(100)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(200)
+			# if (gc.getGame().getGameTurnYear() > 1600):
+			# 	CyGame().setAheadOfTimeEra(7)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(50)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(100)
+			# if (gc.getGame().getGameTurnYear() > 1750):
+			# 	CyGame().setAheadOfTimeEra(8)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(100)
+			# if (gc.getGame().getGameTurnYear() > 1910):
+			# 	CyGame().setAheadOfTimeEra(9)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(50)
+			# if (gc.getGame().getGameTurnYear() > 1940):
+			# 	CyGame().setAheadOfTimeEra(10)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(0)
+
+		CvAdvisorUtils.resetNoLiberateCities()
+		return 0
+```
+
+and in 		
+
+
+```
+def onEndGameTurn(self, argsList):
+		'Called at the end of the end of each turn'
+		iGameTurn = argsList[0]
+		## Barbarian Civ ##
+		if not gc.getGame().isOption(GameOptionTypes.GAMEOPTION_NO_BARBARIAN_CIV):
+			BarbCiv.BarbCiv().checkBarb()
+		## Barbarian Civ ##
+		
+		if not gc.getGame().isOption(GameOptionTypes.GAMEOPTION_NO_AHEAD):
+			for iTech in xrange(gc.getNumTechInfos()):
+				TechInfo = gc.getTechInfo(iTech)
+				TechInfo.setAheadOfTime(0)
+
+
+			# if (gc.getGame().getGameTurnYear() > -2001) and (CyGame().getAheadOfTimeEra() < 1):
+			# 	CyGame().setAheadOfTimeEra(1)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(50)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(100)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(200)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(300)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(400)
+			# 	CyInterface().addImmediateMessage(CyTranslator().getText("TXT_BRON_ERA_AHEAD", ()), "")
+			# elif (gc.getGame().getGameTurnYear() > -1201) and (CyGame().getAheadOfTimeEra() < 2):
+			# 	CyGame().setAheadOfTimeEra(2)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(100)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(200)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(300)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(400)
+			# 	CyInterface().addImmediateMessage(CyTranslator().getText("TXT_CLAS_ERA_AHEAD", ()), "")
+			# elif (gc.getGame().getGameTurnYear() > 0) and (CyGame().getAheadOfTimeEra() < 3):
+			# 	CyGame().setAheadOfTimeEra(3)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(50)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(100)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(200)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(300)
+			# 	CyInterface().addImmediateMessage(CyTranslator().getText("TXT_IMP_ERA_AHEAD", ()), "")
+			# elif (gc.getGame().getGameTurnYear() > 400) and (CyGame().getAheadOfTimeEra() < 4):
+			# 	CyGame().setAheadOfTimeEra(4)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(100)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(200)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(300)
+			# 	CyInterface().addImmediateMessage(CyTranslator().getText("TXT_MED_ERA_AHEAD", ()), "")
+			# elif (gc.getGame().getGameTurnYear() > 1100) and (CyGame().getAheadOfTimeEra() < 5):
+			# 	CyGame().setAheadOfTimeEra(5)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(50)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(100)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(200)
+			# 	CyInterface().addImmediateMessage(CyTranslator().getText("TXT_CRUS_ERA_AHEAD", ()), "")
+			# elif (gc.getGame().getGameTurnYear() > 1400) and (CyGame().getAheadOfTimeEra() < 6):
+			# 	CyGame().setAheadOfTimeEra(6)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(100)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(200)
+			# 	CyInterface().addImmediateMessage(CyTranslator().getText("TXT_REN_ERA_AHEAD", ()), "")
+			# elif (gc.getGame().getGameTurnYear() > 1600) and (CyGame().getAheadOfTimeEra() < 7):
+			# 	CyGame().setAheadOfTimeEra(7)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(50)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(100)
+			# 	CyInterface().addImmediateMessage(CyTranslator().getText("TXT_NAT_ERA_AHEAD", ()), "")
+			# elif (gc.getGame().getGameTurnYear() > 1750) and (CyGame().getAheadOfTimeEra() < 8):
+			# 	CyGame().setAheadOfTimeEra(8)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(100)
+			# 	CyInterface().addImmediateMessage(CyTranslator().getText("TXT_IND_ERA_AHEAD", ()), "")
+			# elif (gc.getGame().getGameTurnYear() > 1910) and (CyGame().getAheadOfTimeEra() < 9):
+			# 	CyGame().setAheadOfTimeEra(9)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(50)
+			# 	CyInterface().addImmediateMessage(CyTranslator().getText("TXT_WW_ERA_AHEAD", ()), "")
+			# elif (gc.getGame().getGameTurnYear() > 1940) and (CyGame().getAheadOfTimeEra() < 10):
+			# 	CyGame().setAheadOfTimeEra(10)
+			# 	for iTech in xrange(gc.getNumTechInfos()):
+			# 		TechInfo = gc.getTechInfo(iTech)
+			# 		if TechInfo.getEra() == 1:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 2:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 3:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 4:
+			# 			TechInfo.setAheadOfTime(0)
+			# 		elif TechInfo.getEra() == 5:
+			# 			TechInfo.setAheadOfTime(0)
+			# 	CyInterface().addImmediateMessage(CyTranslator().getText("TXT_MOD_ERA_AHEAD", ()), "")
+```
+In ```CvInfos.cpp``` the ahead of time has the following formula: 
+
+```
+iResearchCost = (m_iResearchCost * (100 + m_iAheadOfTime ) / 100);
+```
+
+It means that 0 is no change, +100 is the double effort and -100 is no effort for a research.
 
 ## Tips and Tricks to Get the Game running Smoothly
 I play several multiplayer games on the Worldmap Huge with 52 civilizations. We are 3-4 players, who play over Steam. Although it is tough, we managed to play the game to the modern era with 
@@ -141,7 +514,7 @@ The following things help here:
 3. Option: single unit graphics
 4. Option: graphical paging
 5. CivilizationIV.ini: Paging out units and unit animations 
-6. CivlizationIV.ini: Play in windowed mode and not in full screen
+6. CivilizationIV.ini: Play in windowed mode and not in full screen
 
 ### Out of Sync Errors Unnoticed
 The problem was that there emerged lots of out of sync errors early in the game. The worst thing was that it is not always noticeable that out of sync occurs. After some time, you see different things than other players. We play one very fast computer, two „normal“ computers and a slow laptop. It seems that the different speeds at which the computers are able to start a new turn cause frequent out of sync errors. 
