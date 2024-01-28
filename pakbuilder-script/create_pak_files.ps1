@@ -3,6 +3,10 @@
 # For selected folders in the element list, create links to those folders and build pak files from them. For the elements in the 
 # "to copy" list, it copies the whole folder into the pakbuilder outputfolder. Run the script as an administrator to be able to 
 # create the symbolic links in Windows.
+# 
+# Sources: https://forums.civfanatics.com/threads/utilizing-pakbuild-for-faster-mod-load.679925/
+#
+
 
 ######################
 # Variables to adapt #
