@@ -581,5 +581,8 @@ In ```./compile-dll```, files necessary for the compilation of the realism invic
 - ```PSDK=\[(FOLDER\]\Microsoft Platform SDK```
 5. Execute build for Release
 
+## Pakbuilder Script
+In ```./pakbuilder-script```, there is a script for building the pak files for RI.
+
 # Additional Guides
 https://forums.civfanatics.com/threads/the-easiest-way-to-compile-a-new-dll.608137/
