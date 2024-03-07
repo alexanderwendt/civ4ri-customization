@@ -584,5 +584,16 @@ In ```./compile-dll```, files necessary for the compilation of the realism invic
 ## Pakbuilder Script
 In ```./pakbuilder-script```, there is a script for building the pak files for RI.
 
+## Python stubs
+in ```./python-stubs```, python stubs are added. To apply them to PyCharm or any other IDE, include the stubs in the build.
+In PyCharm, use Settings->Project structure and add all folders with python files to content root.
+
 # Additional Guides
-https://forums.civfanatics.com/threads/the-easiest-way-to-compile-a-new-dll.608137/
+DLL complile: https://forums.civfanatics.com/threads/the-easiest-way-to-compile-a-new-dll.608137/
+Debug console commands: https://forums.civfanatics.com/threads/tutorial-in-game-cheats-modding-debugging-using-console-commands.145278/
+Debug console commands: https://www.liveabout.com/civilization-iv-cheats-pc-3401827#:~:text=Open%20the%20developer%20console%20with,enter%20the%20code%20or%20hotkey.
+Learn how to mod the SDK: https://forums.civfanatics.com/threads/best-way-to-learn-how-to-mod-the-sdk.677705/
+
+Python mock extensions: https://github.com/civ4-mp/pbmod/tree/master/tests/Pylint_for_Civ4/Civ4PythonApi
+Python mock extensions 2: https://github.com/civ4-mp/pbmod/tree/master
+
