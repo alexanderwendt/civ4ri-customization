@@ -582,7 +582,7 @@ In ```./compile-dll```, files necessary for the compilation of the realism invic
 5. Execute build for Release
 
 ## Pakbuilder Script
-In ```./pakbuilder-script```, there is a script for building the pak files for RI.
+In ```./pakbuilder-script```, there is a script for building the pak files for RI. NOTE: To be able to create links, you need to start the powershell as administrator.
 
 ## Python stubs
 in ```./python-stubs```, python stubs are added. To apply them to PyCharm or any other IDE, include the stubs in the build.
