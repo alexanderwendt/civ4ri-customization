@@ -11,3 +11,4 @@ The map does not have the claim to be historic, but to provide a game, where alr
 - All main civilizations have already received their religions of 2022, to make alliances between e.g. euopean countries easier
 
 Images
+![World map](/_images/world_map.png)
