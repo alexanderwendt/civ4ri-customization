@@ -3,7 +3,7 @@ The following map is a modified version of the World map huge in Civ4 RI 3.61. T
 to create a scenario where the current power balance of the world is modeled. The map does not have the claim to be historic, but to provide a game, where already 4000 B.C. the present conflics are built in. From this map,
 modifications could be made to start with the modern era and where military strength is modeled in a modern scenario.
 
-## Modifications to the standrad world map
+## Modifications to the standard World Map
 - Argentinians are replaced by the Dutch
 - Palestinians are replaced by the Nubians
 - North Korea is replaced by the South Chinese
