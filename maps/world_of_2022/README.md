@@ -30,6 +30,7 @@ Conflict Russia and Ukraine
 - With ai autoplay (game.aiplay xxx) fill the map with cities and units and then put current military strength as units on the map
 - Add additional nations and personalities, e.g. Argentinian or North Korean.
 - Realistic city names
+- Add preset diplomatic relations between the West, the Eurasic axis, the shia and sunny moslem world, the African and South American countries
 
 ## Credits
 Thank you Walter Hawkwood for making Civilization IV the best game to play!
