@@ -10,5 +10,16 @@ The map does not have the claim to be historic, but to provide a game, where alr
 - America can be reached with costal ships
 - All main civilizations have already received their religions of 2022, to make alliances between e.g. euopean countries easier
 
-Images
+## Images
+
+The world map
 ![World map](./_images/world_map.png)
+
+Conflict Isreal and Palestine
+![World map](./_images/isreal_palestine.png)
+
+Conflict North and South Korea
+![World map](./_images/north_south_korea.png)
+
+Conflict Russia and Ukraine
+![World map](./_images/ukraine_russia.png)
