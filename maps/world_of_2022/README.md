@@ -1,4 +1,4 @@
-# Civ4 Realism Invictus: World Setup of 2022
+# Civ4 Realism Invictus: World of 2022
 The following map is a modified version of the huge world map in Civ4 RI 3.61. The purpose is to create a world that models some of the current conflicts and power balances of the world at the beginning of the year 2022. 
 The map does not claim to be historic, but to provide a game, where already 4000 B.C. the present conflics are built in, e.g. the Turks do not have a starting position in Caucasus, but in the current location of Turkey. Although Europe have strong nations, the space is limited and also the growth compared to Russia, China and the USA. As religions have already been set to the cilivations, it is supposed that the western countries will cooperate or at least not annihiliate each other. Russia starts weak, but has much growing potential to the east. China and USA both have much space to grow. Further, is it especially challenging to play Taiwan or Isreal.
 
