@@ -6,7 +6,7 @@ Starting from this map, a goal is to let the AI play with itself to populate the
 
 The mp was built and tested in the world builder with Civ4 RI 3.61 r5422 [Download here](https://sourceforge.net/projects/civ4mods/).
 
-## Modifications to huge world map in Civ4 RI 3.61
+## Modifications to Huge World map of Civ4 RI
 - The north passage is open to travel with costal ships to make better access to settlements in the north
 - America can be reached with costal ships to make faster contact and interaction
 - Most native, minor civilizations were reduced or removed and replaced by major, playable civilizations and barbarians to accelerate the conquests by the major nations
