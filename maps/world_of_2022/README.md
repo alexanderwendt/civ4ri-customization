@@ -20,19 +20,25 @@ Please feel free to improve the map and propose improvements!
 - The location of Canada is replaced by the Celts
 
 ## Images
+
 Starting positions: The world map
+
 ![World map](./_images/world_map.png)
 
 Starting positions: Conflict Isreal and Palestine
+
 ![Isreal and Palestine](./_images/isreal_palestine.png)
 
 Starting positions: Conflict North and South Korea
+
 ![North and South Korea](./_images/north_south_korea.png)
 
 Starting positions: Conflict Russia and Ukraine
+
 ![Russia and Ukraine](./_images/ukraine_russia.png)
 
 After about 400 turns of AI play
+
 ![europe 400 turns](./_images/europe_400_turns.png)
 
 ## Possible Further Improvements
