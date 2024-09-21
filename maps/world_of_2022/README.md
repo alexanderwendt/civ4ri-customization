@@ -4,7 +4,7 @@ The map does not claim to be historic, but to provide a game, where already 4000
 
 Starting from this map, one purpose is to let the AI play with itself to populate the whole map to look like the world of today and then to create a World of 2022 scenario of it. Modifications could be made to start with the modern era and military strength could be modeled in a modern scenario.
 
-The mp was built and tested in the world builder with Civ4 RI 3.61 r5422 ![Download here](https://sourceforge.net/projects/civ4mods/).
+The mp was built and tested in the world builder with Civ4 RI 3.61 r5422 [Download here](https://sourceforge.net/projects/civ4mods/).
 
 ## Modifications to huge world map in Civ4 RI 3.61
 - The north passage is open to travel with costal ships to make better access to settlements in the north
