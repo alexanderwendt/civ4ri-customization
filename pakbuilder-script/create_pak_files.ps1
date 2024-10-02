@@ -3,10 +3,6 @@
 # For selected folders in the element list, create links to those folders and build pak files from them. For the elements in the 
 # "to copy" list, it copies the whole folder into the pakbuilder outputfolder. Run the script as an administrator to be able to 
 # create the symbolic links in Windows.
-# 
-# Sources: https://forums.civfanatics.com/threads/utilizing-pakbuild-for-faster-mod-load.679925/
-#
-
 
 ######################
 # Variables to adapt #
@@ -84,3 +80,6 @@ foreach ($element in $ELEMENT_LIST) {
 foreach ($copyElement in $ELEMENTS_TO_COPY_LIST) {
 	Copy-Item -Path "$MOD_RELATIVE_PATH_BASEDIR\$($copyElement)" -Destination "$OUT_FOLDER\Art\$copyElement" -Recurse -force
 }
+
+echo "Create mod folder for civ ri"
+& .\subscript_copy_assets_to_runnable_mod.ps1

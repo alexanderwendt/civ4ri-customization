@@ -583,10 +583,39 @@ In ```./compile-dll```, files necessary for the compilation of the realism invic
 
 ## Pakbuilder Script
 In ```./pakbuilder-script```, there is a script for building the pak files for RI. NOTE: To be able to create links, you need to start the powershell as administrator.
+It creates the PAK files and copies all other asset files correctly to a mod folder to use.
 
 ## Python stubs
 in ```./python-stubs```, python stubs are added. To apply them to PyCharm or any other IDE, include the stubs in the build.
 In PyCharm, use Settings->Project structure and add all folders with python files to content root.
+
+## Handling GFC error: failed to initialize the primary control theme
+If you get into "GFC error: failed to initialize the primary control theme", the path in "C:\Games\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\Mods\Realism Invictus\Assets\XML\Art\CIV4ArtDefines_Misc.xml"
+is wrong. It should match your file. Set the file path correct to Realism Invictus:
+"C:\Games\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\Mods\Realism Invictus\Resource\Realism Invictus.thm" and here, set the content to
+```
+// *** Control Bitmap Theme file
+
+// Set the resource 
+resource_path "Mods/Realism Invictus/Resource";
+
+// Setup common properties
+include "Mods/Realism Invictus/Resource/Themes/Realism Invictus/Civ4Theme.thm";
+```
+Rename Directory
+"C:\Games\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\Mods\Realism Invictus\Resource\Themes\Realism Invictus"
+
+```
+<MiscArtInfo>
+			<Type>DEFAULT_THEME_NAME</Type>
+			<Path>Mods/Realism Invictus/Resource/Realism Invictus.thm</Path>
+			<fScale>0.0</fScale>
+			<NIF>None</NIF>
+			<KFM>None</KFM>
+		</MiscArtInfo>
+```
+
+Source: https://www.moddb.com/games/civilization-iv/downloads/civ4bts-ffh2-game-of-thrones-mod
 
 # Additional Guides
 DLL complile: https://forums.civfanatics.com/threads/the-easiest-way-to-compile-a-new-dll.608137/

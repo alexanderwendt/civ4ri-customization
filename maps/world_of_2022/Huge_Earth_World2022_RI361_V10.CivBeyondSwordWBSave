@@ -26,7 +26,7 @@ BeginGame
 	TargetScore=0
 	StartYear=-4000
 	Description=The World Map with the positions of the earth 2022 for Realism:Invictus
-	ModPath=Realism
+	ModPath=Realism Invictus
 EndGame
 BeginTeam
 	TeamID=0, (Gamal Abdel Nasser)
