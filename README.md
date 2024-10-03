@@ -86,7 +86,7 @@ For ```<Type>WORLDSIZE_HUGE</Type>``` do the following modifications:
 
 ```
 <!-- AW CUSTOM CHANGES BEGIN -->
-<!-- iTargetNumCities>6</iTargetNumCities -->
+<!-- iTargetNumCities>7</iTargetNumCities -->
 <iTargetNumCities>8</iTargetNumCities>
 <!-- AW CUSTOM CHANGES END -->
 ```
