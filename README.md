@@ -117,7 +117,7 @@ replace the following values
 ```
 <!-- AW CUSTOM CHANGES BEGIN -->
 <!-- iDistanceMaintenancePercent>90</iDistanceMaintenancePercent -->
-<iDistanceMaintenancePercent>80</iDistanceMaintenancePercent>
+<iDistanceMaintenancePercent>75</iDistanceMaintenancePercent>
 <!-- iNumCitiesMaintenancePercent>85</iNumCitiesMaintenancePercent -->
 <iNumCitiesMaintenancePercent>70</iNumCitiesMaintenancePercent>
 <!-- AW CUSTOM CHANGES END -->
