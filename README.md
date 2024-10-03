@@ -95,8 +95,10 @@ and further down in the XML
 
 ```
 <!-- AW CUSTOM CHANGES BEGIN -->
+<!-- <iResearchPercent>92</iResearchPercent> -->
+<iResearchPercent>92</iResearchPercent>
 <!--<iPerCityResearchCostModifier>9</iPerCityResearchCostModifier>-->
-<iPerCityResearchCostModifier>1</iPerCityResearchCostModifier>
+<iPerCityResearchCostModifier>2</iPerCityResearchCostModifier>
 <iTradeProfitPercent>30</iTradeProfitPercent>
 <!--<iDistanceMaintenancePercent>100</iDistanceMaintenancePercent>-->
 <iDistanceMaintenancePercent>80</iDistanceMaintenancePercent>
