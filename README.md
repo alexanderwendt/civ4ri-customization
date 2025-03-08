@@ -2,7 +2,7 @@
 Customizations for Civilization 4 Realism Invictus
 
 ## Prerequisites
-These modifications were made for a Realism Invictus 3.5 (Realism Invictus 3.5 (2020-02-28) Setup (Full).exe) around the 2020-08-21 with hotfixes 1-7 applied.
+These modifications were made for a Realism Invictus 3.72 r5469 (Realism Invictus 3.72 (2025-02-24) Setup (Full).exe).
 
 
 Start settings for the game
@@ -130,10 +130,10 @@ Often, it turns out that the research is not balanced, and especially it is noti
 games it is not possible to create a new map from the save game to fix it. Therefore, the research rate has to be "fixed" 
 in the python scripts instead. It can be done by doing the following. Check that at the start of the game the 
 option "set ahead of time research penalty" is activated. In the code, disable the ahead of time penalty and adapt it. 
-This is done in the file ```.\Realism Invictus\Assets\Python\CvEventManager.py```. 
+This is done in the file ```.\Realism Invictus\Assets\Python\Components\AheadOfTime.py```.
 
 In these methods, replace the logic with a for loop that always sets ahead of time to 0 to cancel the effect 
-of ahead of time.
+of ahead of time. A negative value will make it go faster than normal with the research.
 
 ```
 def onLoadGame(self, argsList):
