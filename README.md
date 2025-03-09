@@ -136,6 +136,7 @@ option "set ahead of time research penalty" is activated. In the code, disable t
 This is done in the file ```.\Realism Invictus\Assets\Python\Components\AheadOfTime.py```. Replace the values with appropriate
 values in the matrix.
 
+```
 Eras = {
 0:	[-10000,	10,20,30,40,50,50],
 1:	[-2000,		0,10,20,30,40,40],	## 2000 BC as a start date for that era, and then a list of all the tech cost modifiers
@@ -149,6 +150,7 @@ Eras = {
 9:	[1910,		0,0,0,0,0,10],	
 10:	[1945,		0,0,0,0,0,0]
 }
+```
 
 In ```CvInfos.cpp``` the ahead of time has the following formula: 
 
