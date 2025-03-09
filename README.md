@@ -74,7 +74,7 @@ CvGameUtils as your modifications will be ignored."
 
 Additional information: https://forums.civfanatics.com/threads/customizing-300bc-scenario.443668/
 
-### Adapted World Settings
+### OBSOLETE Adapted World Settings
 Adapted some settings of the world to prevent unwanted effects. File 
 ```.\Realism Invictus\Assets\XML\GameInfo\CIV4WorldInfo.xml```
 
@@ -112,7 +112,7 @@ and further down in the XML
 <!-- AW CUSTOM CHANGES END -->
 ```
 
-### Adapted Handicap Settings
+### OBSOLETE Adapted Handicap Settings
 To help the AI to expand to other continents, we lowered the penalty for distance and number of cities.
 File ```.\Realism Invictus\Assets\XML\GameInfo\CIV4HandicapInfo.xml``` (copy the original to *.xml.orig)
 
