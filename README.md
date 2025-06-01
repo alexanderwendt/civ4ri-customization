@@ -268,9 +268,16 @@ in ```./python-stubs```, python stubs are added. To apply them to PyCharm or any
 In PyCharm, use Settings->Project structure and add all folders with python files to content root.
 
 ## Handling GFC error: failed to initialize the primary control theme
-If you get into "GFC error: failed to initialize the primary control theme", the path in "C:\Games\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\Mods\Realism Invictus\Assets\XML\Art\CIV4ArtDefines_Misc.xml"
-is wrong. It should match your file. Set the file path correct to Realism Invictus:
-"C:\Games\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\Mods\Realism Invictus\Resource\Realism Invictus.thm" and here, set the content to
+If you get into "GFC error: failed to initialize the primary control theme", the paths in the mod have to be adapted. 
+
+Rename the directory structure from "Realism" to "Realism Invictus":
+```C:\Games\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\Mods\Realism Invictus\Resource\Themes\Realism Invictus```
+
+Set the file path correct to Realism Invictus and rename the file in "Realism.htm":
+```C:\Games\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\Mods\Realism Invictus\Resource\Realism Invictus.thm``` 
+
+and here, set the content to, in the file, set the content to "Realism Invictus" instead of "Realism"
+
 ```
 // *** Control Bitmap Theme file
 
@@ -280,8 +287,8 @@ resource_path "Mods/Realism Invictus/Resource";
 // Setup common properties
 include "Mods/Realism Invictus/Resource/Themes/Realism Invictus/Civ4Theme.thm";
 ```
-Rename Directory
-"C:\Games\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\Mods\Realism Invictus\Resource\Themes\Realism Invictus"
+
+In ```C:\Games\Steam\steamapps\common\Sid Meier's Civilization IV Beyond the Sword\Beyond the Sword\Mods\Realism Invictus\Assets\XML\Art\CIV4ArtDefines_Misc.xml```, rename this part to "Realism Invictus":
 
 ```
 <MiscArtInfo>
