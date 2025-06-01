@@ -74,6 +74,38 @@ CvGameUtils as your modifications will be ignored."
 
 Additional information: https://forums.civfanatics.com/threads/customizing-300bc-scenario.443668/
 
+### Adapt Research Pace During the Game
+Often, it turns out that the research is not balanced, and especially it is noticable in the late game. In multiplayer 
+games it is not possible to create a new map from the save game to fix it. Therefore, the research rate has to be "fixed" 
+in the python scripts instead. It can be done by doing the following. Check that at the start of the game the 
+option "set ahead of time research penalty" is activated. In the code, disable the ahead of time penalty and adapt it. 
+This is done in the file ```.\Realism Invictus\Assets\Python\Components\AheadOfTime.py```. Replace the values with appropriate
+values in the matrix.
+
+```
+Eras = {
+0:	[-10000,	10,20,30,40,50,50],
+1:	[-2000,		0,10,20,30,40,40],	## 2000 BC as a start date for that era, and then a list of all the tech cost modifiers
+2:	[-1200,		0,5,20,30,40,40],	
+3:	[0,			0,0,10,20,30,40],		
+4:	[400,		0,0,5,20,30,30],
+5:	[1100,		0,0,0,10,20,30],	
+6:	[1400,		0,0,0,10,20,20],	
+7:	[1600,		0,0,0,0,10,20],	
+8:	[1750,		0,0,0,0,5,10],		
+9:	[1910,		0,0,0,0,0,10],	
+10:	[1945,		0,0,0,0,0,0]
+}
+```
+
+In ```CvInfos.cpp``` the ahead of time has the following formula: 
+
+```
+iResearchCost = (m_iResearchCost * (100 + m_iAheadOfTime ) / 100);
+```
+
+It means that 0 is no change, +100 is the double effort and -100 is no effort for a research.
+
 ### OBSOLETE Adapted World Settings
 Adapted some settings of the world to prevent unwanted effects. File 
 ```.\Realism Invictus\Assets\XML\GameInfo\CIV4WorldInfo.xml```
@@ -127,38 +159,6 @@ replace the following values
 <iNumCitiesMaintenancePercent>70</iNumCitiesMaintenancePercent>
 <!-- AW CUSTOM CHANGES END -->
 ```
-
-### Adapt Research Pace During the Game
-Often, it turns out that the research is not balanced, and especially it is noticable in the late game. In multiplayer 
-games it is not possible to create a new map from the save game to fix it. Therefore, the research rate has to be "fixed" 
-in the python scripts instead. It can be done by doing the following. Check that at the start of the game the 
-option "set ahead of time research penalty" is activated. In the code, disable the ahead of time penalty and adapt it. 
-This is done in the file ```.\Realism Invictus\Assets\Python\Components\AheadOfTime.py```. Replace the values with appropriate
-values in the matrix.
-
-```
-Eras = {
-0:	[-10000,	10,20,30,40,50,50],
-1:	[-2000,		0,10,20,30,40,40],	## 2000 BC as a start date for that era, and then a list of all the tech cost modifiers
-2:	[-1200,		0,5,20,30,40,40],	
-3:	[0,			0,0,10,20,30,40],		
-4:	[400,		0,0,5,20,30,30],
-5:	[1100,		0,0,0,10,20,30],	
-6:	[1400,		0,0,0,10,20,20],	
-7:	[1600,		0,0,0,0,10,20],	
-8:	[1750,		0,0,0,0,5,10],		
-9:	[1910,		0,0,0,0,0,10],	
-10:	[1945,		0,0,0,0,0,0]
-}
-```
-
-In ```CvInfos.cpp``` the ahead of time has the following formula: 
-
-```
-iResearchCost = (m_iResearchCost * (100 + m_iAheadOfTime ) / 100);
-```
-
-It means that 0 is no change, +100 is the double effort and -100 is no effort for a research.
 
 ## Tips and Tricks to Get the Game running Smoothly
 I play several multiplayer games on the Worldmap Huge with 52 civilizations. We are 3-4 players, who play over Steam. Although it is tough, we managed to play the game to the modern era with 
