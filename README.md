@@ -2,7 +2,7 @@
 Customizations for Civilization 4 Realism Invictus
 
 ## Prerequisites
-These modifications were made for a Realism Invictus 3.72 r5469 (Realism Invictus 3.72 (2025-02-24) Setup (Full).exe).
+These modifications were made for a Realism Invictus 3.72 r5497 (Realism Invictus 3.72 (2025-02-24) Setup (Full).exe).
 
 
 Start settings for the game
