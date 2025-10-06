@@ -32474,8 +32474,9 @@ BeginPlot
 	EndUnit
 	BeginCity
 		CityOwner=11, (Joseph Stalin)
-		CityName=Moscow
+		CityName=Moskva
 		CityPopulation=1
+		ReligionType=RELIGION_ORTHODOXY
 		BuildingType=BUILDING_PALACE
 	EndCity
 	TeamReveal=2,10,11,14,16,18,
