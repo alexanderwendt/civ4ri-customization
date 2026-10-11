@@ -175,7 +175,7 @@ How to use:
 - for virtual memoryGreater than 825 megabytes
 - for 30 seconds
 - then trim virtual memory
-- virtual memory metric to use: Any memory metric
+- virtual memory metric to use: Working Set
 5. Go to options->Memory->Enable Smart Trim
 
 ### Must DOs to prevent Crashes of the Game
