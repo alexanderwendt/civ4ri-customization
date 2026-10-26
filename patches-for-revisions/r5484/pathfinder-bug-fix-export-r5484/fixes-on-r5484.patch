@@ -1,0 +1,1046 @@
+--- a/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/CvGameCoreDLL.cpp
++++ b/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/CvGameCoreDLL.cpp
+@@ -39,99 +39,89 @@
+ //
+ // operator global new and delete override for gamecore DLL 
+ //
++// RI FIX 5 BEGIN - throwing new must not return NULL or swallow allocator exceptions.
+ void *__cdecl operator new(size_t size)
+ {
++    if (size == 0) size = 1;
++    void* result = gDLL ? gDLL->newMem(size, __FILE__, __LINE__) : malloc(size);
++    if (!result) throw std::bad_alloc();
++    memset(result, 0, size);
++    PROFILE_TRACK_ALLOC(result);
++    return result;
++}
++// RI FIX 5 END
++
++void __cdecl operator delete (void *p)
++{
+ 	if (gDLL)
+ 	{
+-		void* result = NULL;
+-
+-		try
+-		{
+-			result = gDLL->newMem(size, __FILE__, __LINE__);
+-			memset(result,0,size);
+-
+-			PROFILE_TRACK_ALLOC(result);
+-		}
+-		catch(std::exception ex)
+-		{
+-			OutputDebugString("Allocation failure\n");
+-		}
+-
+-		return result;
+-	}
+-
+-	OutputDebugString("Alloc [unsafe]");
+-	//::MessageBoxA(NULL,"UNsafe alloc","CvGameCore",MB_OK); // disabled by K-Mod, for now.
+-	return malloc(size);
+-}
+-
+-void __cdecl operator delete (void *p)
++		PROFILE_TRACK_DEALLOC(p);
++
++		gDLL->delMem(p, __FILE__, __LINE__);
++	}
++	else
++	{
++		free(p);
++	}
++}
++
++// RI FIX 5 BEGIN - check array allocation before zeroing it.
++void* operator new[](size_t size)
++{
++    if (size == 0) size = 1;
++    void* result = gDLL ? gDLL->newMemArray(size, __FILE__, __LINE__) : malloc(size);
++    if (!result) throw std::bad_alloc();
++    memset(result, 0, size);
++    return result;
++}
++// RI FIX 5 END
++
++void operator delete[](void* pvMem)
+ {
+ 	if (gDLL)
+ 	{
+-		PROFILE_TRACK_DEALLOC(p);
+-
+-		gDLL->delMem(p, __FILE__, __LINE__);
++		gDLL->delMemArray(pvMem, __FILE__, __LINE__);
+ 	}
+ 	else
+ 	{
+-		free(p);
+-	}
+-}
+-
+-void* operator new[](size_t size)
+-{
+-	if (gDLL)
+-	{
+-		//OutputDebugString("Alloc [safe]");
+-		void* result = gDLL->newMemArray(size, __FILE__, __LINE__);
+-
+-		memset(result,0,size);
+-
+-		return result;
+-	}
+-
+-	OutputDebugString("Alloc [unsafe]");
+-	::MessageBoxA(NULL,"UNsafe alloc","CvGameCore",MB_OK);
+-	return malloc(size);
+-}
+-
+-void operator delete[](void* pvMem)
+-{
+-	if (gDLL)
+-	{
+-		gDLL->delMemArray(pvMem, __FILE__, __LINE__);
+-	}
+-	else
+-	{
+ 		free(pvMem);
+ 	}
+ }
+ 
++// RI FIX 5 BEGIN - preserve debug allocation/deallocation families (both use newMem/delMem).
+ void *__cdecl operator new(size_t size, char* pcFile, int iLine)
+ {
+-	void* result = gDLL->newMem(size, pcFile, iLine);
+-
+-	memset(result,0,size);
+-	return result;
++    if (size == 0) size = 1;
++    void* result = gDLL ? gDLL->newMem(size, pcFile, iLine) : malloc(size);
++    if (!result) throw std::bad_alloc();
++    memset(result, 0, size);
++    return result;
+ }
+ 
+ void *__cdecl operator new[](size_t size, char* pcFile, int iLine)
+ {
+-	void* result = gDLL->newMem(size, pcFile, iLine);
+-
+-	memset(result,0,size);
+-	return result;
+-}
++    if (size == 0) size = 1;
++    void* result = gDLL ? gDLL->newMem(size, pcFile, iLine) : malloc(size);
++    if (!result) throw std::bad_alloc();
++    memset(result, 0, size);
++    return result;
++}
++// RI FIX 5 END
+ 
+ void __cdecl operator delete(void* pvMem, char* pcFile, int iLine)
+ {
+-	gDLL->delMem(pvMem, pcFile, iLine);
++// RI FIX 5 BEGIN
++	if (gDLL) gDLL->delMem(pvMem, pcFile, iLine);
++	else free(pvMem);
++// RI FIX 5 END
+ }
+ 
+ void __cdecl operator delete[](void* pvMem, char* pcFile, int iLine)
+ {
+-	gDLL->delMem(pvMem, pcFile, iLine);
++// RI FIX 5 BEGIN
++	if (gDLL) gDLL->delMem(pvMem, pcFile, iLine);
++	else free(pvMem);
++// RI FIX 5 END
+ }
+ 
+ 
+--- a/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/CvGameInterface.cpp
++++ b/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/CvGameInterface.cpp
+@@ -318,7 +318,10 @@
+ 
+ 			// city sites
+ 			const CvPlayerAI& kActivePlayer = GET_PLAYER(getActivePlayer());
+-			KmodPathFinder site_path;
++			// RI FIX 2 BEGIN
++KmodPathFinder& site_path = KmodPathFinder::ColoredPlotFinder();
++			site_path.Clear(); // group pointers/flags cannot detect changed terrain or movement
++// RI FIX 2 END
+ 			site_path.SetSettings(pHeadSelectedUnit->getGroup(), 0, 7, GC.getMOVE_DENOMINATOR());
+ 			if (pHeadSelectedUnit->isFound())
+ 			{
+--- a/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/CvMap.cpp
++++ b/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/CvMap.cpp
+@@ -9,6 +9,12 @@
+ 
+ 
+ #include "CvGameCoreDLL.h"
++// RI FIX 3 BEGIN
++#include "KmodPathFinder.h"
++// RI FIX 3 END
++// RI FIX 7 BEGIN
++#include "RISaveValidation.h"
++// RI FIX 7 END
+ #include "CvMap.h"
+ #include "CvCity.h"
+ #include "CvPlotGroup.h"
+@@ -111,6 +117,10 @@
+ 
+ void CvMap::uninit()
+ {
++// RI FIX 3 BEGIN
++    // Forget old group and plot references before destroying the old map.
++    KmodPathFinder::ClearColoredPlotFinder();
++// RI FIX 3 END
+ 	SAFE_DELETE_ARRAY(m_paiNumBonus);
+ 	SAFE_DELETE_ARRAY(m_paiNumBonusOnLand);
+ 
+@@ -253,6 +263,13 @@
+ // Initializes all data that is not serialized but needs to be initialized after loading.
+ void CvMap::setup()
+ {
++// RI FIX 3 BEGIN
++    // Both generated and loaded maps reach setup with dimensions available.
++    KmodPathFinder& uiFinder = KmodPathFinder::ColoredPlotFinder();
++    uiFinder.Clear();
++    if (!uiFinder.PrepareNodeMap())
++        OutputDebugStringA("RI: early UI pathfinder allocation failed; will retry on use.\n");
++// RI FIX 3 END
+ 	PROFILE("CvMap::setup");
+ 
+ 	KmodPathFinder::InitHeuristicWeights(); // K-Mod
+@@ -1456,6 +1473,12 @@
+ 
+ 	pStream->Read(&m_iGridWidth);
+ 	pStream->Read(&m_iGridHeight);
++// RI FIX 7 BEGIN
++    if (m_iGridWidth <= 0 || m_iGridHeight <= 0 ||
++        m_iGridWidth > MAX_INT / m_iGridHeight ||
++        (size_t)m_iGridWidth > ((size_t)-1) / sizeof(CvPlot) / (size_t)m_iGridHeight)
++        RIInvalidSave("Invalid map dimensions. Loading cannot continue; the game will close.");
++// RI FIX 7 END
+ 	pStream->Read(&m_iLandPlots);
+ 	pStream->Read(&m_iOwnedPlots);
+ 	pStream->Read(&m_iTopLatitude);
+--- a/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/CvPlot.cpp
++++ b/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/CvPlot.cpp
+@@ -1,6 +1,9 @@
+ // plot.cpp
+ 
+ #include "CvGameCoreDLL.h"
++// RI FIX 7 BEGIN
++#include "RISaveValidation.h"
++// RI FIX 7 END
+ #include "CvPlot.h"
+ #include "CvCity.h"
+ #include "CvUnit.h"
+@@ -375,42 +378,61 @@
+ 	return iResult;
+ }
+ 
+-#define DEFAULT_MAX_WORKING_SET_THRESHOLD_BEFORE_EVICTION ((size_t)1024*(size_t)1024*(size_t)1024*(size_t)2)
+-#define DEFAULT_OS_MEMORY_ALLOWANCE ((size_t)1024*(size_t)1024*(size_t)512)
+-
++// RI FIX 8 BEGIN - throttled contiguous-region measurement plus pressure hysteresis.
+ bool NeedToFreeMemory()
+ {
+-	PROCESS_MEMORY_COUNTERS pmc;
+-	static unsigned int uiMaxMem = 0xFFFFFFFF;
+-
+-	if ( uiMaxMem == 0xFFFFFFFF )
+-	{
+-		MEMORYSTATUSEX memoryStatus;
+-
+-		memoryStatus.dwLength = sizeof(memoryStatus);
+-		GlobalMemoryStatusEx(&memoryStatus);
+-
+-		uiMaxMem = 1024*GC.getDefineINT("MAX_DESIRED_MEMORY_USED", DEFAULT_MAX_WORKING_SET_THRESHOLD_BEFORE_EVICTION/1024);
+-
+-		DWORDLONG usableMemory = memoryStatus.ullTotalPhys - 1024*(DWORDLONG)GC.getDefineINT("OS_MEMORY_ALLOWANCE", DEFAULT_OS_MEMORY_ALLOWANCE/1024);
+-		if ( usableMemory < uiMaxMem )
+-		{
+-			uiMaxMem = (unsigned int)usableMemory;
+-		}
+-	}
+-
+-	GetProcessMemoryInfo( GetCurrentProcess(), &pmc, sizeof(pmc));
+-	
+-	if ( pmc.WorkingSetSize > uiMaxMem )
+-	{
+-		OutputDebugString(CvString::format("Found need to free memory: %d used vs %d target\n", pmc.WorkingSetSize, uiMaxMem).c_str());
+-		return true;
+-	}
+-	else
+-	{
+-		return false;
+-	}
+-}
++    static DWORD lastScan = 0;
++    static bool haveScan = false;
++    static bool pressure = false;
++    const DWORD now = GetTickCount();
++    // The eviction loop uses the cached result and can evict all offscreen plots
++    // in one pass. Do not rescan the full VA map for every eviction.
++    if (haveScan && (DWORD)(now - lastScan) < 1000)
++        return pressure;
++    lastScan = now;
++    haveScan = true;
++
++    MEMORYSTATUSEX status;
++    status.dwLength = sizeof(status);
++    if (!GlobalMemoryStatusEx(&status))
++        return pressure;
++    int percent = GC.getDefineINT("GRAPHICAL_PAGING_EVICT_VA_PERCENT", 70);
++    percent = std::max(10, std::min(95, percent));
++
++    SYSTEM_INFO systemInfo;
++    GetSystemInfo(&systemInfo);
++    size_t cursor = (size_t)systemInfo.lpMinimumApplicationAddress;
++    const size_t maximum = (size_t)systemInfo.lpMaximumApplicationAddress;
++    SIZE_T largest = 0;
++    bool complete = true;
++    while (cursor < maximum)
++    {
++        MEMORY_BASIC_INFORMATION region;
++        if (!VirtualQuery((LPCVOID)cursor, &region, sizeof(region)))
++        {
++            complete = false;
++            break;
++        }
++        if (region.State == MEM_FREE && region.RegionSize > largest)
++            largest = region.RegionSize;
++        const size_t base = (size_t)region.BaseAddress;
++        if (region.RegionSize > ((size_t)-1) - base) break; // 32-bit top boundary
++        const size_t next = base + region.RegionSize;
++        if (next <= cursor) { complete = false; break; }
++        cursor = next;
++    }
++    const DWORDLONG used = status.ullTotalVirtual - status.ullAvailVirtual;
++    const bool highUsage = used > status.ullTotalVirtual / 100 * percent;
++    const bool lowUsage = used < status.ullTotalVirtual / 100 * (percent - 5);
++    const SIZE_T enterRegion = 4 * 1024 * 1024;
++    const SIZE_T leaveRegion = 8 * 1024 * 1024;
++    if (highUsage || (complete && largest < enterRegion))
++        pressure = true;
++    else if (lowUsage && complete && largest >= leaveRegion)
++        pressure = false;
++    return pressure;
++}
++// RI FIX 8 END
+ 
+ static bool bFoundEvictable = true;
+ 
+@@ -10461,6 +10483,9 @@
+ 
+ 	SAFE_DELETE_ARRAY(m_aiCulture);
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_PLAYERS, "Invalid m_aiCulture length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_aiCulture = new int[iSmallCount];
+@@ -10469,6 +10494,9 @@
+ 
+ 	SAFE_DELETE_ARRAY(m_aiFoundValue);
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_PLAYERS, "Invalid m_aiFoundValue length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_aiFoundValue = new short[iSmallCount];
+@@ -10477,6 +10505,9 @@
+ 
+ 	SAFE_DELETE_ARRAY(m_aiPlayerCityRadiusCount);
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_PLAYERS, "Invalid m_aiPlayerCityRadiusCount length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_aiPlayerCityRadiusCount = new char[iSmallCount];
+@@ -10485,6 +10516,9 @@
+ 
+ 	SAFE_DELETE_ARRAY(m_aiPlotGroup);
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_PLAYERS, "Invalid m_aiPlotGroup length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_aiPlotGroup = new int[iSmallCount];
+@@ -10493,6 +10527,9 @@
+ 
+ 	SAFE_DELETE_ARRAY(m_aiVisibilityCount);
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_TEAMS, "Invalid m_aiVisibilityCount length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_aiVisibilityCount = new short[iSmallCount];
+@@ -10501,6 +10538,9 @@
+ 
+ 	SAFE_DELETE_ARRAY(m_aiStolenVisibilityCount);
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_TEAMS, "Invalid m_aiStolenVisibilityCount length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_aiStolenVisibilityCount = new short[iSmallCount];
+@@ -10509,6 +10549,9 @@
+ 
+ 	SAFE_DELETE_ARRAY(m_aiBlockadedCount);
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_TEAMS, "Invalid m_aiBlockadedCount length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_aiBlockadedCount = new short[iSmallCount];
+@@ -10517,6 +10560,9 @@
+ 
+ 	SAFE_DELETE_ARRAY(m_aiRevealedOwner);
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_TEAMS, "Invalid m_aiRevealedOwner length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_aiRevealedOwner = new char[iSmallCount];
+@@ -10525,6 +10571,9 @@
+ 
+ 	SAFE_DELETE_ARRAY(m_abRiverCrossing);
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, NUM_DIRECTION_TYPES, "Invalid m_abRiverCrossing length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_abRiverCrossing = new bool[iSmallCount];
+@@ -10533,6 +10582,9 @@
+ 
+ 	SAFE_DELETE_ARRAY(m_abRevealed);
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_TEAMS, "Invalid m_abRevealed length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_abRevealed = new bool[iSmallCount];
+@@ -10541,6 +10593,9 @@
+ 
+ 	SAFE_DELETE_ARRAY(m_aeRevealedImprovementType);
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_TEAMS, "Invalid m_aeRevealedImprovementType length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_aeRevealedImprovementType = new short[iSmallCount];
+@@ -10549,6 +10604,9 @@
+ 
+ 	SAFE_DELETE_ARRAY(m_aeRevealedRouteType);
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_TEAMS, "Invalid m_aeRevealedRouteType length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_aeRevealedRouteType = new short[iSmallCount];
+@@ -10559,6 +10617,9 @@
+ 
+ 	SAFE_DELETE_ARRAY(m_paiBuildProgress);
+ 	pStream->Read(&iCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iCount, GC.getNumBuildInfos(), "Invalid m_paiBuildProgress length. The game will close.");
++// RI FIX 7 END
+ 	if (iCount > 0)
+ 	{
+ 		m_paiBuildProgress = new short[iCount];
+@@ -10574,12 +10635,18 @@
+ 		SAFE_DELETE_ARRAY(m_apaiCultureRangeCities);
+ 	}
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_PLAYERS, "Invalid m_apaiCultureRangeCities length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_apaiCultureRangeCities = new char*[iSmallCount];
+ 		for (int iI = 0; iI < iSmallCount; ++iI)
+ 		{
+ 			pStream->Read(&iCount);
++// RI FIX 7 BEGIN
++            RIValidateSaveCount(iCount, GC.getNumCultureLevelInfos(), "Invalid m_apaiCultureRangeCities row length. The game will close.");
++// RI FIX 7 END
+ 			if (iCount > 0)
+ 			{
+ 				m_apaiCultureRangeCities[iI] = new char[iCount];
+@@ -10601,12 +10668,18 @@
+ 		SAFE_DELETE_ARRAY(m_apaiInvisibleVisibilityCount);
+ 	}
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_TEAMS, "Invalid m_apaiInvisibleVisibilityCount length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_apaiInvisibleVisibilityCount = new short*[iSmallCount];
+ 		for (int iI = 0; iI < iSmallCount; ++iI)
+ 		{
+ 			pStream->Read(&iCount);
++// RI FIX 7 BEGIN
++            RIValidateSaveCount(iCount, GC.getNumInvisibleInfos(), "Invalid m_apaiInvisibleVisibilityCount row length. The game will close.");
++// RI FIX 7 END
+ 			if (iCount > 0)
+ 			{
+ 				m_apaiInvisibleVisibilityCount[iI] = new short[iCount];
+@@ -10629,12 +10702,18 @@
+ 		SAFE_DELETE_ARRAY(m_apaiTeamAidAmount);
+ 	}
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_TEAMS, "Invalid m_apaiTeamAidAmount length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_apaiTeamAidAmount = new short*[iSmallCount];
+ 		for (int iI = 0; iI < iSmallCount; ++iI)
+ 		{
+ 			pStream->Read(&iSmallCount2);
++// RI FIX 7 BEGIN
++            RIValidateSaveCount(iSmallCount2, GC.getNumAidInfos(), "Invalid m_apaiTeamAidAmount row length. The game will close.");
++// RI FIX 7 END
+ 			if (iSmallCount2 > 0)
+ 			{
+ 				m_apaiTeamAidAmount[iI] = new short[iSmallCount2];
+@@ -10658,12 +10737,18 @@
+ 		SAFE_DELETE_ARRAY(m_apaiTeamDetrimentAmount);
+ 	}
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_TEAMS, "Invalid m_apaiTeamDetrimentAmount length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_apaiTeamDetrimentAmount = new short*[iSmallCount];
+ 		for (int iI = 0; iI < iSmallCount; ++iI)
+ 		{
+ 			pStream->Read(&iSmallCount2);
++// RI FIX 7 BEGIN
++            RIValidateSaveCount(iSmallCount2, GC.getNumDetrimentInfos(), "Invalid m_apaiTeamDetrimentAmount row length. The game will close.");
++// RI FIX 7 END
+ 			if (iSmallCount2 > 0)
+ 			{
+ 				m_apaiTeamDetrimentAmount[iI] = new short[iSmallCount2];
+@@ -10687,12 +10772,18 @@
+ 		SAFE_DELETE_ARRAY(m_apaiTeamCombatUnitDomainCount);
+ 	}
+ 	pStream->Read(&iSmallCount);
++// RI FIX 7 BEGIN
++    RIValidateSaveCount(iSmallCount, MAX_TEAMS, "Invalid m_apaiTeamCombatUnitDomainCount length. The game will close.");
++// RI FIX 7 END
+ 	if (iSmallCount > 0)
+ 	{
+ 		m_apaiTeamCombatUnitDomainCount = new unsigned short*[iSmallCount];
+ 		for (int iI = 0; iI < iSmallCount; ++iI)
+ 		{
+ 			pStream->Read(&iSmallCount2);
++// RI FIX 7 BEGIN
++            RIValidateSaveCount(iSmallCount2, NUM_DOMAIN_TYPES, "Invalid m_apaiTeamCombatUnitDomainCount row length. The game will close.");
++// RI FIX 7 END
+ 			if (iSmallCount2 > 0)
+ 			{
+ 				m_apaiTeamCombatUnitDomainCount[iI] = new unsigned short[iSmallCount2];
+--- a/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/CvReplayInfo.cpp
++++ b/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/CvReplayInfo.cpp
+@@ -39,7 +39,9 @@
+ 	{
+ 		SAFE_DELETE(m_listReplayMessages[i]);
+ 	}
+-	SAFE_DELETE(m_pcMinimapPixels);
++	// RI FIX 6 BEGIN
++SAFE_DELETE_ARRAY(m_pcMinimapPixels); // matches new unsigned char[]
++// RI FIX 6 END
+ }
+ 
+ void CvReplayInfo::createInfo(PlayerTypes ePlayer)
+@@ -173,7 +175,9 @@
+ 	m_iMapWidth = GC.getMapINLINE().getGridWidthINLINE();
+ 	m_iMapHeight = GC.getMapINLINE().getGridHeightINLINE();
+ 	
+-	SAFE_DELETE(m_pcMinimapPixels);	
++	// RI FIX 6 BEGIN
++SAFE_DELETE_ARRAY(m_pcMinimapPixels); // matches new unsigned char[]
++// RI FIX 6 END	
+ 	m_pcMinimapPixels = new unsigned char[m_nMinimapSize];
+ 	
+ 	void *ptexture = (void*)gDLL->getInterfaceIFace()->getMinimapBaseTexture();
+@@ -646,7 +650,9 @@
+ 		}
+ 		stream.Read(&m_iMapWidth);
+ 		stream.Read(&m_iMapHeight);
+-		SAFE_DELETE(m_pcMinimapPixels);
++		// RI FIX 6 BEGIN
++SAFE_DELETE_ARRAY(m_pcMinimapPixels); // matches new unsigned char[]
++// RI FIX 6 END
+ 		m_pcMinimapPixels = new unsigned char[m_nMinimapSize];
+ 		stream.Read(m_nMinimapSize, m_pcMinimapPixels);
+ 		stream.Read(&m_bMultiplayer);
+--- a/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/KmodPathFinder.cpp
++++ b/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/KmodPathFinder.cpp
+@@ -4,6 +4,10 @@
+ #include "KmodPathFinder.h"
+ #include "CvGameCoreUtils.h"
+ 
++// RI FIX 2 BEGIN
++// Non-owning registry: map teardown must not construct or resurrect a static finder.
++static KmodPathFinder* riColoredPlotFinder = NULL;
++// RI FIX 2 END
+ int KmodPathFinder::admissible_scaled_weight = 1;
+ int KmodPathFinder::admissible_base_weight = 1;
+ 
+@@ -45,10 +49,15 @@
+ 
+ //
+ KmodPathFinder::KmodPathFinder() :
++// RI FIX 1 BEGIN
++	dest_x(-1), dest_y(-1), start_x(-1), start_y(-1),
++// RI FIX 1 END
+ 	end_node(0),
+ 	map_width(0),
+ 	map_height(0),
+-	node_data(0)
++// RI FIX 4 BEGIN
++	node_blocks(0), node_block_count(0)
++// RI FIX 4 END
+ {
+ 	// Unfortunately, the pathfinder is constructed before the map width and height are determined.
+ 
+@@ -60,29 +69,83 @@
+ 
+ KmodPathFinder::~KmodPathFinder()
+ {
+-	free(node_data);
+-}
+-
++// RI FIX 2 BEGIN
++    if (riColoredPlotFinder == this)
++        riColoredPlotFinder = NULL; // later CvMap destruction must not touch this object
++// RI FIX 2 END
++// RI FIX 4 BEGIN
++	ReleaseNodeMap();
++// RI FIX 4 END
++}
++
++// RI FIX 1 BEGIN - validate dimensions, preserve allocation on failure, reset after resize.
+ bool KmodPathFinder::ValidateNodeMap()
+ {
++    PROFILE_FUNC();
++    if (!GC.getGameINLINE().isFinalInitialized())
++        return false;
++    // RI FIX 3 BEGIN - gameplay gate belongs here, not in the storage allocator.
++    return PrepareNodeMap();
++}
++
++bool KmodPathFinder::PrepareNodeMap()
++{
++    // RI FIX 3 END
++    const int width = GC.getMapINLINE().getGridWidthINLINE();
++    const int height = GC.getMapINLINE().getGridHeightINLINE();
++    if (width <= 0 || height <= 0 || width > MAX_INT / height ||
++        (size_t)width > ((size_t)-1) / sizeof(FAStarNode) / (size_t)height)
++    {
++        open_list.clear();
++        end_node = NULL;
++        settings.pGroup = NULL;
++        return false;
++    }
++// RI FIX 4 BEGIN
++    if (!node_blocks || map_width != width || map_height != height)
++    {
++        // Each node block is about 22 KiB on BTS; node addresses never move.
++        // Free obsolete storage first: dimensions changed, so its paths are unusable.
++        ReleaseNodeMap();
++        const size_t count = (size_t)width * height;
++        const size_t blocks = (count + NODE_BLOCK_SIZE - 1) / NODE_BLOCK_SIZE;
++        node_blocks = (FAStarNode**)calloc(blocks, sizeof(FAStarNode*));
++        if (!node_blocks)
++        {
++            settings.pGroup = NULL;
++            return false;
++        }
++        node_block_count = blocks;
++        for (size_t i = 0; i < blocks; ++i)
++        {
++            node_blocks[i] = (FAStarNode*)calloc(NODE_BLOCK_SIZE, sizeof(FAStarNode));
++            if (!node_blocks[i])
++            {
++                ReleaseNodeMap(); // also frees partially allocated block directories
++                settings.pGroup = NULL;
++                return false;
++            }
++        }
++        map_width = width;
++        map_height = height;
++    }
++// RI FIX 4 END
++    return true;
++}
++// RI FIX 1 END
++
++bool KmodPathFinder::GeneratePath(int x1, int y1, int x2, int y2)
++{
+ 	PROFILE_FUNC();
+-	if (!GC.getGameINLINE().isFinalInitialized())
+-		return false;
+-
+-	if (map_width != GC.getMapINLINE().getGridWidthINLINE() || map_height != GC.getMapINLINE().getGridHeightINLINE())
+-	{
+-		map_width = GC.getMapINLINE().getGridWidthINLINE();
+-		map_height = GC.getMapINLINE().getGridHeightINLINE();
+-		node_data = (FAStarNode*)realloc(node_data, sizeof(*node_data)*map_width*map_height);
+-		end_node = NULL;
+-	}
+-	return true;
+-}
+-
+-bool KmodPathFinder::GeneratePath(int x1, int y1, int x2, int y2)
+-{
+-	PROFILE_FUNC();
+-
++
++// RI FIX 9 BEGIN
++    // Release builds must reject invalid coordinates before GetNode/pathDestValid.
++    end_node = NULL;
++    if (!node_blocks || !settings.pGroup || x1 < 0 || x1 >= map_width ||
++        y1 < 0 || y1 >= map_height || x2 < 0 || x2 >= map_width ||
++        y2 < 0 || y2 >= map_height)
++        return false;
++// RI FIX 9 END
+ 	FASSERT_BOUNDS(0, map_width , x1, "GeneratePath");
+ 	FASSERT_BOUNDS(0, map_height, y1, "GeneratePath");
+ 	FASSERT_BOUNDS(0, map_width , x2, "GeneratePath");
+@@ -155,7 +218,9 @@
+ 
+ bool KmodPathFinder::GeneratePath(const CvPlot* pToPlot)
+ {
+-	if (!settings.pGroup || !pToPlot)
++	// RI FIX 9 BEGIN
++if (!settings.pGroup || !pToPlot || !settings.pGroup->plot())
++// RI FIX 9 END
+ 		return false;
+ 	return GeneratePath(settings.pGroup->plot()->getX_INLINE(), settings.pGroup->plot()->getY_INLINE(),
+ 		pToPlot->getX_INLINE(), pToPlot->getY_INLINE());
+@@ -251,13 +316,29 @@
+ 	}
+ }
+ 
++// RI FIX 1 BEGIN - null-safe, overflow-safe reset.
++// RI FIX 4 BEGIN - clear blocks without moving node addresses.
+ void KmodPathFinder::Reset()
+ {
+-	memset(&node_data[0], 0, sizeof(*node_data)*map_width*map_height);
+-	open_list.clear();
+-	end_node = NULL;
+-	// settings is set separately.
+-}
++    for (size_t i = 0; i < node_block_count; ++i)
++        memset(node_blocks[i], 0, NODE_BLOCK_SIZE * sizeof(FAStarNode));
++    open_list.clear();
++    end_node = NULL;
++}
++
++void KmodPathFinder::ReleaseNodeMap()
++{
++    open_list.clear();
++    end_node = NULL;
++    for (size_t i = 0; i < node_block_count; ++i)
++        free(node_blocks[i]);
++    free(node_blocks);
++    node_blocks = NULL;
++    node_block_count = 0;
++    map_width = map_height = 0;
++}
++// RI FIX 4 END
++// RI FIX 1 END
+ 
+ void KmodPathFinder::AddStartNode()
+ {
+@@ -337,6 +418,13 @@
+ 		//int iPlotNum = GC.getMapINLINE().plotNumINLINE(x, y);
+ 		//FAssert(iPlotNum >= 0 && iPlotNum < GC.getMapINLINE().numPlotsINLINE());
+ 
++// RI FIX 9 BEGIN
++        if (x < 0 || x >= map_width || y < 0 || y >= map_height)
++        {
++            Reset();
++            return false;
++        }
++// RI FIX 9 END
+ 		FAStarNode* child_node = &GetNode(x, y);
+ 		bool bNewNode = !child_node->m_bOnStack;
+ 
+@@ -387,11 +475,38 @@
+ 
+ 		if (parent_node->m_iKnownCost < child_node->m_iKnownCost)
+ 		{
+-			int iNewCost = parent_node->m_iKnownCost + pathCost(parent_node, child_node, 666, &settings, 0);
++// RI FIX 9 BEGIN
++            const __int64 candidate = (__int64)parent_node->m_iKnownCost +
++                pathCost(parent_node, child_node, 666, &settings, 0);
++            if (candidate <= 0 || candidate > MAX_INT)
++            {
++                Reset();
++                return false;
++            }
++            int iNewCost = (int)candidate;
++// RI FIX 9 END
+ 			FAssert(iNewCost > 0);
+ 
+ 			if (iNewCost < child_node->m_iKnownCost)
+ 			{
++// RI FIX 9 BEGIN
++                // Validate counts and old-parent membership BEFORE mutating the tree.
++                const int capacity = sizeof(parent_node->m_apChildren) / sizeof(parent_node->m_apChildren[0]);
++                FAStarNode* oldParent = child_node->m_pParent;
++                if (parent_node->m_iNumChildren < 0 || parent_node->m_iNumChildren >= capacity ||
++                    (oldParent && (oldParent->m_iNumChildren <= 0 || oldParent->m_iNumChildren > capacity)))
++                {
++                    Reset();
++                    return false;
++                }
++                if (oldParent)
++                {
++                    int matches = 0;
++                    for (int k = 0; k < oldParent->m_iNumChildren; ++k)
++                        if (oldParent->m_apChildren[k] == child_node) ++matches;
++                    if (matches != 1) { Reset(); return false; }
++                }
++// RI FIX 9 END
+ 				int cost_delta = iNewCost - child_node->m_iKnownCost; // new minus old. Negative value.
+ 
+ 				child_node->m_iKnownCost = iNewCost;
+@@ -430,7 +545,13 @@
+ 
+ 				// update the new (reduced) costs for all the grandchildren.
+ 				FAssert(child_node->m_iNumChildren == 0 || !bNewNode);
+-				ForwardPropagate(child_node, cost_delta);
++// RI FIX 9 BEGIN
++                if (!ForwardPropagate(child_node, cost_delta))
++                {
++                    Reset(); // clears end_node too, so GeneratePath cannot report success
++                    return false;
++                }
++// RI FIX 9 END
+ 
+ 				FAssert(child_node->m_iKnownCost > parent_node->m_iKnownCost);
+ 			}
+@@ -440,45 +561,70 @@
+ 	return true;
+ }
+ 
+-void KmodPathFinder::ForwardPropagate(FAStarNode* head, int cost_delta)
+-{
+-	//FAssert(cost_delta < 0 || head->m_iNumChildren == 0);
+-	// Note: there are some legitimate cases in which the cost_delta can be positive.
+-	// For example, suppose a shorter path is found to the parent plot, but the path involves
+-	// resting on less attractive plots. And suppose the addition moves saved by the shorter path
+-	// are then spent anyway to take the final step onto the destination...
+-	// In that case, although the path the parent plot has been upgraded, the path to the destination
+-	// is actually degraded (ie. it has a higher total cost). I can't think of a way to solve this problem.
+-	// (but I don't think it is very important.)
+-
+-	// change the known cost of all children by cost_delta, recursively
+-	for (int i = 0; i < head->m_iNumChildren; i++)
+-	{
+-		FAssert(head->m_apChildren[i]->m_pParent == head);
+-
+-		// recalculate movement points.
+-		int iOldMoves = head->m_apChildren[i]->m_iData1;
+-		int iOldTurns = head->m_apChildren[i]->m_iData2;
+-		int iNewDelta = cost_delta;
+-		pathAdd(head, head->m_apChildren[i], ASNC_PARENTADD_UP, &settings, 0);
+-
+-		// if the moves don't match, we may need to recalculate the path cost.
+-		//if (iOldMoves != head->m_apChildren[i]->m_iData1)
+-		{
+-			// Strictly, the cost shouldn't depend on our path history, but it does - because I wanted to use
+-			// the path history for path symmetry breaking.
+-			// But anyway, according to the profiler, this is only going to cost us about a milisecond per turn.
+-			int iPathCost = pathCost(head, head->m_apChildren[i], 666, &settings, 0);
+-			iNewDelta = head->m_iKnownCost + iPathCost - head->m_apChildren[i]->m_iKnownCost;
+-			//FAssert(iNewDelta <= 0);
+-		}
+-
+-		head->m_apChildren[i]->m_iKnownCost += iNewDelta;
+-		head->m_apChildren[i]->m_iTotalCost += iNewDelta;
+-
+-		FAssert(head->m_apChildren[i]->m_iKnownCost > head->m_iKnownCost);
+-
+-		if (iNewDelta != 0 || iOldMoves != head->m_apChildren[i]->m_iData1 || iOldTurns != head->m_apChildren[i]->m_iData2)
+-			ForwardPropagate(head->m_apChildren[i], iNewDelta);
+-	}
+-}
++// RI FIX 9 BEGIN - bounded intrusive DFS; no recursion or extra heap allocation.
++bool KmodPathFinder::ForwardPropagate(FAStarNode* head, int cost_delta)
++{
++    // The old code recomputed each edge's delta from pathCost anyway.
++    // m_pStack is unused by this Kmod finder, so it can hold the pending list.
++    (void)cost_delta;
++    const size_t limit = (size_t)map_width * map_height;
++    size_t visited = 0;
++    head->m_pStack = NULL;
++    FAStarNode* pending = head;
++    while (pending)
++    {
++        if (++visited > limit) return false; // cyclic/duplicate tree cannot run forever
++        FAStarNode* node = pending;
++        pending = node->m_pStack;
++        node->m_pStack = NULL;
++        const int capacity = sizeof(node->m_apChildren) / sizeof(node->m_apChildren[0]);
++        if (node->m_iNumChildren < 0 || node->m_iNumChildren > capacity) return false;
++        // Reverse push preserves the original depth-first sibling order.
++        // Movement/cost recalculation is performed on pop, after the parent.
++        if (node != head)
++        {
++            FAStarNode* parent = node->m_pParent;
++            if (!parent) return false;
++            const int oldMoves = node->m_iData1;
++            const int oldTurns = node->m_iData2;
++            const int oldCost = node->m_iKnownCost;
++            pathAdd(parent, node, ASNC_PARENTADD_UP, &settings, 0);
++            const __int64 known = (__int64)parent->m_iKnownCost + pathCost(parent, node, 666, &settings, 0);
++            const __int64 total = known + node->m_iHeuristicCost;
++            if (known <= 0 || known > MAX_INT || total < 0 || total > MAX_INT) return false;
++            node->m_iKnownCost = (int)known;
++            node->m_iTotalCost = (int)total;
++            if (oldCost == node->m_iKnownCost && oldMoves == node->m_iData1 && oldTurns == node->m_iData2)
++                continue; // retain original pruning rule
++        }
++        for (int i = node->m_iNumChildren - 1; i >= 0; --i)
++        {
++            FAStarNode* child = node->m_apChildren[i];
++            if (!child || child == node || child->m_pParent != node) return false;
++            child->m_pStack = pending;
++            pending = child;
++        }
++    }
++    return true;
++}
++// RI FIX 9 END
++// RI FIX 2 BEGIN - retain storage, never retain UI search state between refreshes.
++void KmodPathFinder::Clear()
++{
++    Reset();
++    settings = CvPathSettings();
++}
++
++KmodPathFinder& KmodPathFinder::ColoredPlotFinder()
++{
++    static KmodPathFinder finder; // DLL-owned; CvGame's exported layout is unchanged
++    riColoredPlotFinder = &finder;
++    return finder;
++}
++
++void KmodPathFinder::ClearColoredPlotFinder()
++{
++    if (riColoredPlotFinder)
++        riColoredPlotFinder->Clear();
++}
++// RI FIX 2 END
+\ No newline at end of file
+--- a/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/KmodPathFinder.h
++++ b/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/KmodPathFinder.h
+@@ -2,6 +2,11 @@
+ 
+ #include <vector>
+ #include "FAStarNode.h"
++
++// RI FIX 1 BEGIN
++class CvSelectionGroup;
++class CvPlot;
++// RI FIX 1 END
+ 
+ struct CvPathSettings
+ {
+@@ -37,12 +42,29 @@
+ 	void SetSettings(const CvPathSettings& new_settings);
+ 	void SetSettings(const CvSelectionGroup* pGroup, int iFlags = 0, int iMaxPath = -1, int iHW=-1) { SetSettings(CvPathSettings(pGroup, iFlags, iMaxPath, iHW)); }
+ 	void Reset();
++// RI FIX 2 BEGIN
++	void Clear();
++// RI FIX 3 BEGIN
++	bool PrepareNodeMap(); // storage only; allowed before final initialization
++// RI FIX 3 END
++	static KmodPathFinder& ColoredPlotFinder();
++	static void ClearColoredPlotFinder();
++// RI FIX 2 END
++
++// RI FIX 1 BEGIN
++private:
++	// Owning buffers must never be shallow-copied.
++	KmodPathFinder(const KmodPathFinder&);
++	KmodPathFinder& operator=(const KmodPathFinder&);
++// RI FIX 1 END
+ 
+ protected:
+ 	void AddStartNode();
+ 	void RecalculateHeuristics();
+ 	bool ProcessNode();
+-	void ForwardPropagate(FAStarNode* head, int cost_delta);
++	// RI FIX 9 BEGIN
++bool ForwardPropagate(FAStarNode* head, int cost_delta);
++// RI FIX 9 END
+ 	typedef std::vector<FAStarNode*> OpenList_t;
+ 
+ 	struct OpenList_sortPred
+@@ -50,8 +72,19 @@
+ 		bool operator()(const FAStarNode* &left, const FAStarNode* &right);
+ 	};
+ 
+-	FAStarNode& GetNode(int x, int y) { return node_data[y*map_width+x]; }
+-	FAStarNode* node_data;
++	// RI FIX 4 BEGIN
++FAStarNode& GetNode(int x, int y)
++    {
++        const size_t index = (size_t)y * map_width + x;
++        return node_blocks[index / NODE_BLOCK_SIZE][index % NODE_BLOCK_SIZE];
++    }
++    enum { NODE_BLOCK_SIZE = 256 };
++    void ReleaseNodeMap();
++// RI FIX 4 END
++	// RI FIX 4 BEGIN
++FAStarNode** node_blocks;
++    size_t node_block_count;
++// RI FIX 4 END
+ 	OpenList_t open_list;
+ 
+ 	int dest_x, dest_y;
+--- /dev/null
++++ b/realism/bts/trunk/mod/GameCore/CvGameCoreDLL/RISaveValidation.h
+@@ -0,0 +1,19 @@
++#pragma once
++// RI FIX 7 BEGIN - shared policy for malformed/incompatible serialized array sizes.
++// These void read interfaces expose no recoverable failure result to the EXE.
++// Do not return with a partially consumed stream or unwind into an unknown EXE handler.
++inline void RIInvalidSave(const char* detail)
++{
++    OutputDebugStringA(detail);
++    MessageBoxA(NULL, detail, "Realism Invictus: invalid or incompatible save", MB_OK | MB_ICONERROR);
++    ExitProcess(ERROR_INVALID_DATA);
++}
++
++inline void RIValidateSaveCount(int actual, int expected, const char* detail)
++{
++    // Zero represents an absent optional array. Nonzero arrays are indexed by
++    // the current player/team/XML domain, so smaller allocations are also unsafe.
++    if (actual < 0 || (actual != 0 && actual != expected))
++        RIInvalidSave(detail);
++}
++// RI FIX 7 END
+\ No newline at end of file

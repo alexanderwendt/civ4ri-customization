@@ -160,6 +160,10 @@ replace the following values
 <!-- AW CUSTOM CHANGES END -->
 ```
 
+### Patches for Revisions
+In `./patches-for-revisions`, bugfixes and custom compiled versions of game files are present. The patches have been made based on experience during gameplay of single and multiplayer games. 
+ 
+
 ## Tips and Tricks to Get the Game running Smoothly
 I play several multiplayer games on the Worldmap Huge with 52 civilizations. We are 3-4 players, who play over Steam. Although it is tough, we managed to play the game to the modern era with 
 only moderate rate of crashes. Here is my experience about how to handle multiplayer problems.
